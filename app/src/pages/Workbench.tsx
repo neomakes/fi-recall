@@ -44,19 +44,50 @@ function relayout(nodes: any[]): Record<string, { x: number; y: number }> {
   });
   return pos;
 }
+// 고립 노드(엣지 0개) 자가연결 — 같은 섹션의 가장 가까운 조항에 sequence 엣지로 잇는다.
+// (스테일 백엔드가 contains 누락으로 외톨이 노드를 보내도 화면에선 연결.)
+function connectOrphans(map: AnyMap): AnyMap {
+  const ids = new Set(map.nodes.map((n) => n.id));
+  const deg: Record<string, number> = {};
+  for (const n of map.nodes) deg[n.id] = 0;
+  for (const e of map.edges) { if (ids.has(e.from)) deg[e.from]++; if (ids.has(e.to)) deg[e.to]++; }
+  const orphans = map.nodes.filter((n) => deg[n.id] === 0);
+  if (!orphans.length) return map;
+  const sectionOf = (n: any) => parseInt(clauseOf(n.id), 10) || 0;
+  const seen = new Set(map.edges.map((e) => [e.from, e.to].sort().join("|")));
+  const extra: any[] = [];
+  for (const o of orphans) {
+    const sec = sectionOf(o);
+    const cands = map.nodes.filter((n) => n.id !== o.id);
+    const sib =
+      cands.filter((n) => sectionOf(n) === sec)
+        .sort((a, b) => clauseOf(a.id).localeCompare(clauseOf(b.id), undefined, { numeric: true }))[0] ??
+      cands.slice().sort((a, b) => Math.abs(sectionOf(a) - sec) - Math.abs(sectionOf(b) - sec))[0];
+    if (!sib) continue;
+    const [from, to] =
+      clauseOf(o.id).localeCompare(clauseOf(sib.id), undefined, { numeric: true }) <= 0 ? [o.id, sib.id] : [sib.id, o.id];
+    const k = [from, to].sort().join("|");
+    if (!seen.has(k)) { seen.add(k); extra.push({ from, to, type: "sequence" }); }
+  }
+  return extra.length ? { ...map, edges: [...map.edges, ...extra] } : map;
+}
+
 function normalizeMap(map: AnyMap): AnyMap {
-  if (!map?.nodes?.length || map.nodes.length === 1) return map;
-  const ys = new Set(map.nodes.map((n) => n.y));
-  const xs = new Set(map.nodes.map((n) => n.x));
-  const collapsed =
-    ys.size <= 1 || xs.size <= 1 || // 한 줄/한 열로 붕괴
-    map.nodes.some((n) => typeof n.x !== "number" || typeof n.y !== "number");
-  if (!collapsed) return map;
-  const pos = relayout(map.nodes);
-  return {
-    ...map,
-    nodes: map.nodes.map((n) => ({ ...n, x: pos[n.id]?.x ?? n.x ?? 50, y: pos[n.id]?.y ?? n.y ?? 50 })),
-  };
+  if (!map?.nodes?.length) return map;
+  let out = map;
+  // (a) 좌표 붕괴(한 줄/한 열/비수치) 복구
+  if (map.nodes.length > 1) {
+    const ys = new Set(map.nodes.map((n) => n.y));
+    const xs = new Set(map.nodes.map((n) => n.x));
+    const collapsed =
+      ys.size <= 1 || xs.size <= 1 || map.nodes.some((n) => typeof n.x !== "number" || typeof n.y !== "number");
+    if (collapsed) {
+      const pos = relayout(map.nodes);
+      out = { ...out, nodes: out.nodes.map((n) => ({ ...n, x: pos[n.id]?.x ?? n.x ?? 50, y: pos[n.id]?.y ?? n.y ?? 50 })) };
+    }
+  }
+  // (b) 고립 노드 연결
+  return connectOrphans(out);
 }
 
 interface DebriefDoc {

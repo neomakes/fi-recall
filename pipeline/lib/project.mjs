@@ -46,8 +46,36 @@ export function doctrineToMap(graph) {
     modality: n.modality,
     quote: n.provenance?.quote,
   }));
-  const edges = (graph.edges ?? [])
-    .filter((e) => nodeIds.has(e.from) && nodeIds.has(e.to)) // 양 끝이 노드인 엣지만(섹션 부모 제외)
+  const raw = graph.edges ?? [];
+  const byId = Object.fromEntries(graph.nodes.map((n) => [n.id, n]));
+
+  // 1) 양 끝이 모두 노드인 엣지(의존/예외/참조) — 그대로 투영
+  const real = raw
+    .filter((e) => nodeIds.has(e.from) && nodeIds.has(e.to))
     .map((e) => ({ from: e.from, to: e.to, type: REL_TO_EDGE[e.relation] ?? "sequence" }));
+
+  // 2) contains(섹션 부모→자식)는 부모를 렌더하지 않으므로, 같은 부모의 자식들을
+  //    조항(clause) 순서로 잇는 sequence 엣지로 치환 → contains로만 연결됐던 잎 노드의 고립 방지.
+  const childrenByParent = new Map();
+  for (const e of raw) {
+    if (e.relation === "contains" && nodeIds.has(e.to)) {
+      if (!childrenByParent.has(e.from)) childrenByParent.set(e.from, []);
+      childrenByParent.get(e.from).push(e.to);
+    }
+  }
+  const siblings = [];
+  for (const kids of childrenByParent.values()) {
+    const ordered = kids.slice().sort((a, b) =>
+      String(byId[a]?.clause).localeCompare(String(byId[b]?.clause), undefined, { numeric: true }));
+    for (let i = 0; i < ordered.length - 1; i++) siblings.push({ from: ordered[i], to: ordered[i + 1], type: "sequence" });
+  }
+
+  // 병합 + 중복 제거(방향 무시)
+  const seen = new Set();
+  const edges = [];
+  for (const e of [...real, ...siblings]) {
+    const k = [e.from, e.to].sort().join("|");
+    if (!seen.has(k)) { seen.add(k); edges.push(e); }
+  }
   return { title: graph.scope ?? graph.domain, nodes, edges };
 }
