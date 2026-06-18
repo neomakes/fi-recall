@@ -1,0 +1,12 @@
+{
+  "name": "firecall-pipeline",
+  "private": true,
+  "type": "module",
+  "description": "FI:RECALL — SOP→교리 그래프 추출 + 충실성 평가 하니스. app/UI와 독립. 의존성 0(Node 빌트인 + pdftotext + fetch).",
+  "scripts": {
+    "index": "node build-index.mjs",
+    "slice": "node slice.mjs",
+    "extract": "node extract.mjs",
+    "eval": "node eval.mjs"
+  }
+}

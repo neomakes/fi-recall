@@ -1,0 +1,151 @@
+{
+  "_comment": "실 데이터 기반 워크드 예시 2건. (1) SOP 107 무선통신의 교리 지도(Layer A), (2) input/01_아파트화재_핫워시.md의 '무전 채널 혼선' 복기를 부착한 오버레이(Layer B). 모든 노드는 재난현장표준작전절차.pdf SOP 107 원문 조항에서 추출했고, id는 십진 번호에서 결정론적으로 생성했다. 이 파일은 doctrine-graph.schema.json 검증 + Claude 추출용 few-shot 둘 다로 쓰인다.",
+
+  "doctrine_graph": {
+    "doc_type": "doctrine_graph",
+    "version": "1.0.0",
+    "domain": "command",
+    "source": "재난현장표준작전절차.pdf",
+    "scope": "SOP 107 무선 통신",
+    "nodes": [
+      {
+        "id": "SOP-107-1.1",
+        "type": "standard",
+        "domain": "command",
+        "sop": "SOP-107",
+        "sop_title": "무선 통신",
+        "clause": "1.1",
+        "label": "현장지휘관의 무전 통제 책임",
+        "text": "현장지휘관은 재난현장에서 효율적 무전과 그 유지·통제에 대한 책임을 진다.",
+        "modality": "mandatory",
+        "actor": "현장지휘관",
+        "tags": ["무선통신", "지휘책임"],
+        "provenance": { "source": "재난현장표준작전절차.pdf", "page": 18, "clause_path": "SOP 107 > 1 > 1.1", "quote": "현장지휘관은 재난현장에서 효율적 무전과 그 유지·통제에 대한 책임을 진다." }
+      },
+      {
+        "id": "SOP-107-1.3",
+        "type": "standard",
+        "domain": "command",
+        "sop": "SOP-107",
+        "sop_title": "무선 통신",
+        "clause": "1.3",
+        "label": "무선통신 우선순위(대원안전 최우선)",
+        "text": "무선 통신의 우선순위는 다음과 같다. ① 대원 안전 ② 구조대상자 ③ 재난현장 주요요소 ④ 전략, 전술, 대응활동계획",
+        "modality": "mandatory",
+        "actor": "전 대원",
+        "tags": ["무선통신", "우선순위", "대원안전"],
+        "provenance": { "source": "재난현장표준작전절차.pdf", "page": 18, "clause_path": "SOP 107 > 1 > 1.3", "quote": "무선 통신의 우선순위는 다음과 같다. ① 대원 안전 ② 구조대상자 ③ 재난현장 주요요소 ④ 전략, 전술, 대응활동계획" }
+      },
+      {
+        "id": "SOP-107-2.6",
+        "type": "decision",
+        "domain": "command",
+        "sop": "SOP-107",
+        "sop_title": "무선 통신",
+        "clause": "2.6",
+        "label": "다수 단위대 시 단위대별 채널 분리",
+        "text": "재난의 규모가 크거나 복잡하여 다수의 단위대를 설치한 경우에 현장지휘관은 각 단위대별로 별도의 무선채널을 사용하게 할 수 있다.",
+        "modality": "discretionary",
+        "actor": "현장지휘관",
+        "tags": ["무선통신", "채널관리", "다수단위대", "채널분리"],
+        "provenance": { "source": "재난현장표준작전절차.pdf", "page": 18, "clause_path": "SOP 107 > 2 > 2.6", "quote": "재난의 규모가 크거나 복잡하여 다수의 단위대를 설치한 경우에 현장지휘관은 각 단위대별로 별도의 무선채널을 사용하게 할 수 있다." }
+      },
+      {
+        "id": "SOP-107-3.2",
+        "type": "decision",
+        "domain": "command",
+        "sop": "SOP-107",
+        "sop_title": "무선 통신",
+        "clause": "3.2",
+        "label": "다수 조직 시 무전망 분리(지휘/작전/지원)",
+        "text": "현장지휘관은 재난의 규모가 크고 복잡하여 다수의 현장활동 조직을 설치할 경우 다수의 무선채널 사용을 고려한다. 예) 무전망 분리(①지휘망 ②작전망 ③지원망=유관기관망)",
+        "modality": "discretionary",
+        "actor": "현장지휘관",
+        "tags": ["무선통신", "무전망분리", "채널관리"],
+        "provenance": { "source": "재난현장표준작전절차.pdf", "page": 19, "clause_path": "SOP 107 > 3 > 3.2", "quote": "현장지휘관은 재난의 규모가 크고 복잡하여 다수의 현장활동 조직을 설치할 경우 다수의 무선채널 사용을 고려한다." }
+      },
+      {
+        "id": "SOP-107-3.1",
+        "type": "procedure",
+        "domain": "command",
+        "sop": "SOP-107",
+        "sop_title": "무선 통신",
+        "clause": "3.1",
+        "label": "효과적 무선통신 방식(간결·복명복창)",
+        "text": "효과적인 의사전달을 위한 무선통신 방식: ① 명확하고 간결한 용어 ② 평소 음성·일정 속도·명확한 송신 ③ 중요한 내용부터 우선 송신 ④ 목표·내용·위치·임무 특정 ⑤ 수신 내용 확인, 중요 사항 복명복창.",
+        "modality": "recommended",
+        "actor": "전 대원",
+        "tags": ["무선통신", "송신요령", "복명복창"],
+        "provenance": { "source": "재난현장표준작전절차.pdf", "page": 19, "clause_path": "SOP 107 > 3 > 3.1", "quote": "효과적인 의사전달을 위한 무선통신 방식은 다음과 같다." }
+      }
+    ],
+    "edges": [
+      { "from": "SOP-107-1", "to": "SOP-107-1.1", "relation": "contains", "confidence": 1 },
+      { "from": "SOP-107-1", "to": "SOP-107-1.3", "relation": "contains", "confidence": 1 },
+      { "from": "SOP-107-2", "to": "SOP-107-2.6", "relation": "contains", "confidence": 1 },
+      { "from": "SOP-107-3", "to": "SOP-107-3.1", "relation": "contains", "confidence": 1 },
+      { "from": "SOP-107-3", "to": "SOP-107-3.2", "relation": "contains", "confidence": 1 },
+      { "from": "SOP-107-2.6", "to": "SOP-107-3.2", "relation": "dependency", "note": "단위대 채널 분리(2.6)를 실제 적용하려면 무전망 분리 체계(3.2)가 함께 운용되어야 함", "confidence": 0.8 },
+      { "from": "SOP-107-1.3", "to": "SOP-107-2.6", "relation": "reference", "note": "대원안전 최우선(1.3) 원칙이 다수 검색대 채널 분리(2.6)의 정당화 근거", "confidence": 0.7 }
+    ]
+  },
+
+  "debrief_overlay": {
+    "doc_type": "debrief_overlay",
+    "version": "1.0.0",
+    "graph_ref": "ontology/example.sop-107.json#doctrine_graph",
+    "lessons": [
+      {
+        "id": "LSN-2026-0601-01",
+        "debrief_id": "DBF-한빛아파트-20260601",
+        "incident": "한빛아파트 3동 고층화재",
+        "quote": "무전이 좀 꼬였다. 1팀이랑 2팀이 같은 채널 쓰는데 14층/16층 검색 보고가 섞여서, 지휘소에서 누가 어디 있는지 한 번 놓쳤다. 다음엔 검색팀별로 채널을 나눠야 할 듯.",
+        "grounding": [
+          { "node_id": "SOP-107-2.6", "confidence": 0.86, "rationale": "'다수 검색팀이 같은 채널' = 다수 단위대 운용 상황, '검색팀별 채널 분리' 권고 = 2.6의 단위대별 채널 분리 주제와 직접 일치" },
+          { "node_id": "SOP-107-3.2", "confidence": 0.64, "rationale": "무전망 분리(지휘/작전망)로도 보고 혼선을 줄일 수 있어 부차적으로 닿음" }
+        ],
+        "gap": {
+          "type": "doctrine",
+          "rationale": "대상 노드 SOP-107-2.6의 modality가 discretionary('사용하게 할 수 있다')라, 다수 인명검색대 동시 운용처럼 채널 분리가 안전에 직결되는 상황에서도 강제력이 없다. 현장은 SOP를 어긴 게 아니라 SOP가 재량으로 비워둔 틈에 빠진 것 → 실행 격차가 아니라 교리 격차. (대원안전 최우선 원칙 1.3과도 충돌)",
+          "verdict_confidence": 0.78
+        },
+        "recurrence": {
+          "is_recurring": true,
+          "count": 2,
+          "prior_lessons": ["LSN-2025-1118-03"]
+        },
+        "output": {
+          "kind": "sop_amendment",
+          "target_node": "SOP-107-2.6",
+          "proposal": "재량 조항을 조건부 의무로 격상. 현행 '…각 단위대별로 별도의 무선채널을 사용하게 할 수 있다.' → 개정안 '…다수의 단위대를 설치한 경우 현장지휘관은 각 단위대별로 별도의 무선채널을 사용하게 할 수 있다. 다만, 2개 이상의 인명검색대를 동시 운용하는 경우에는 검색대별 채널을 분리한다.' (근거: SOP-107-1.3 대원안전 최우선, 동일 지점 재발 2회)",
+          "drill_ref": null
+        }
+      },
+      {
+        "id": "LSN-2026-0601-02",
+        "debrief_id": "DBF-한빛아파트-20260601",
+        "incident": "한빛아파트 3동 고층화재",
+        "quote": "지휘소에서 누가 어디 있는지 한 번 놓쳤다.",
+        "grounding": [
+          { "node_id": "SOP-107-3.1", "confidence": 0.72, "rationale": "보고 위치 추적 실패 = 복명복창·수신확인(3.1 ⑤) 미이행 신호" }
+        ],
+        "gap": {
+          "type": "execution",
+          "rationale": "대상 노드 SOP-107-3.1은 복명복창·수신확인을 이미 권고(recommended)로 명시하고 있다. 조항은 충분하며 현장이 이를 압박 상황에서 이행하지 못한 것 → 교리 격차가 아니라 실행 격차.",
+          "verdict_confidence": 0.7
+        },
+        "recurrence": {
+          "is_recurring": false,
+          "count": 1,
+          "prior_lessons": []
+        },
+        "output": {
+          "kind": "retraining_drill",
+          "target_node": "SOP-107-3.1",
+          "proposal": "다수 검색대 동시 운용 상황에서 위치·임무 복명복창 반복 훈련. 시나리오: 2개 검색대가 인접 층 동시 진입, 지휘소가 30초 간격으로 위치 확인 호출 → 검색대는 층·라인·임무를 복명복창으로 회신. 목표 = 지휘소의 실시간 대원 위치 인지율 100%.",
+          "drill_ref": "reference/8-step-training-model.md"
+        }
+      }
+    ]
+  }
+}

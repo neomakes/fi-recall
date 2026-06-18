@@ -1,0 +1,14 @@
+# 의존성 / 빌드 산출물
+node_modules/
+dist/
+
+# 환경변수 (접근 코드 등) — 커밋 금지
+.env
+.env.local
+.env.*.local
+
+# 빌드 캐시
+*.tsbuildinfo
+
+# macOS
+.DS_Store

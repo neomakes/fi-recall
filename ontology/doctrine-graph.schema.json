@@ -1,0 +1,200 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/neomakes/fi-recall/ontology/doctrine-graph.schema.json",
+  "title": "FI:RECALL Doctrine Graph Ontology",
+  "description": "두 계층 그래프 계약. Layer A(Doctrine)는 SOP 원문에서 결정론적으로 추출되는 정적 교리 지도이고, Layer B(Overlay)는 복기(debrief)가 Layer A 노드 id에 부착되는 동적 학습 오버레이다. 두 기능(① 교리 지도화 / ② 복기 반영)이 공유하는 단일 계약이며, 이 파일이 FI:RECALL의 핵심 IP다.",
+
+  "$defs": {
+    "Domain": {
+      "description": "SOP 5개 분야 + 현장안전관리 표준지침(SSG). 출처 문서의 1차 분류축.",
+      "type": "string",
+      "enum": ["command", "fire", "accident", "ems", "situation", "safety"],
+      "$comment": "command=Ⅰ지휘통제(SOP 1xx), fire=Ⅱ화재유형별(SOP 2xx), accident=Ⅲ사고유형별(SOP 3xx), ems=Ⅳ구급단계별(SOP 4xx), situation=Ⅴ상황단계별(SOP 5xx), safety=Ⅵ현장안전관리표준지침(SSG)"
+    },
+
+    "NodeType": {
+      "description": "조항의 교리적 역할. UI NodeChip 4타입과 1:1 대응. 추출 단서는 README의 '노드 타입 추출 단서' 표 참조.",
+      "type": "string",
+      "enum": ["procedure", "decision", "hazard", "standard"],
+      "$comment": "procedure=절차(수행할 행동 단계), decision=판단점(판단·선택·고려·분기), hazard=위험(대원안전·고립·붕괴·긴급탈출), standard=표준(규범적 의무·원칙·우선순위·정의)"
+    },
+
+    "Modality": {
+      "description": "조항의 deontic(의무) 강도. 격차 분류의 경첩 — 동일 위반이라도 modality에 따라 교리 격차/실행 격차로 갈린다.",
+      "type": "string",
+      "enum": ["mandatory", "recommended", "discretionary", "informational"],
+      "$comment": "mandatory='~해야 한다/책임을 진다/삼가야 한다', recommended='~을 원칙으로 한다/하도록 한다/노력한다', discretionary='~할 수 있다/고려한다/필요시', informational='예)/정의/배경설명'"
+    },
+
+    "RelationType": {
+      "description": "엣지 의미. contains는 원문 십진 번호에서 결정론적으로 도출되고, 나머지는 의미 추론으로 추가된다.",
+      "type": "string",
+      "enum": ["contains", "sequence", "dependency", "exception", "reference"],
+      "$comment": "contains=계층 포함(1→1.2→1.2.3, 결정론적), sequence=선후(절차 순서), dependency=의존(A 성립 후 B), exception=예외(다만/단 단서), reference=교차 SOP 참조"
+    },
+
+    "Provenance": {
+      "description": "감사 가능성(faithfulness=safety)을 위한 출처 고정. 모든 노드/엣지는 원문으로 역추적 가능해야 한다.",
+      "type": "object",
+      "required": ["source", "page", "clause_path"],
+      "additionalProperties": false,
+      "properties": {
+        "source": { "type": "string", "description": "원본 파일명", "examples": ["재난현장표준작전절차.pdf"] },
+        "page": { "type": "integer", "minimum": 1, "description": "원본 PDF 페이지" },
+        "clause_path": { "type": "string", "description": "사람이 읽는 조항 경로", "examples": ["SOP 107 > 2 > 2.6"] },
+        "quote": { "type": "string", "description": "원문 verbatim 인용(추출 충실성 검증용). 변형 금지." }
+      }
+    },
+
+    "DoctrineNode": {
+      "description": "Layer A. SOP 한 조항 = 한 노드. id는 원문 십진 번호에서 결정론적으로 생성하며 LLM이 임의로 지어내지 않는다.",
+      "type": "object",
+      "required": ["id", "type", "domain", "sop", "clause", "label", "text", "modality", "provenance"],
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^(SOP-[0-9]{3}|SSG-[0-9]+)(-[0-9]+(\\.[0-9]+)*)?$",
+          "description": "결정론적 안정 id. 형식: SOP-{번호}-{조항경로}. 예: SOP-107-2.6, SOP-202-1.4, SSG-3-2.1. grounding(②)의 앵커이며 재발 추적 키.",
+          "examples": ["SOP-107-2.6", "SOP-202-1.4"]
+        },
+        "type": { "$ref": "#/$defs/NodeType" },
+        "domain": { "$ref": "#/$defs/Domain" },
+        "sop": { "type": "string", "pattern": "^(SOP|SSG)-[0-9]+$", "description": "소속 SOP/SSG", "examples": ["SOP-107"] },
+        "sop_title": { "type": "string", "description": "소속 SOP 제목", "examples": ["무선 통신"] },
+        "clause": { "type": "string", "pattern": "^[0-9]+(\\.[0-9]+)*$", "description": "SOP 내 십진 조항 번호", "examples": ["2.6"] },
+        "label": { "type": "string", "maxLength": 80, "description": "지도 표시용 짧은 라벨(요약). 원문 변형 가능." },
+        "text": { "type": "string", "description": "조항 본문(정규화된 전체 문장)." },
+        "modality": { "$ref": "#/$defs/Modality" },
+        "actor": { "type": "string", "description": "수행 주체", "examples": ["현장지휘관", "선착대장", "소방대"] },
+        "tags": { "type": "array", "items": { "type": "string" }, "description": "주제 태그(grounding 보조). 예: 무선통신, 채널관리, 배연." },
+        "provenance": { "$ref": "#/$defs/Provenance" }
+      }
+    },
+
+    "DoctrineEdge": {
+      "description": "Layer A. 노드 간 관계. contains는 confidence=1(결정론적), 나머지는 의미 추론이므로 confidence를 부여한다.",
+      "type": "object",
+      "required": ["from", "to", "relation"],
+      "additionalProperties": false,
+      "properties": {
+        "from": { "type": "string", "description": "출발 노드 id" },
+        "to": { "type": "string", "description": "도착 노드 id" },
+        "relation": { "$ref": "#/$defs/RelationType" },
+        "note": { "type": "string", "description": "관계 근거(특히 dependency/exception/reference)." },
+        "confidence": { "type": "number", "minimum": 0, "maximum": 1, "description": "추론 엣지 신뢰도. contains는 1." }
+      }
+    },
+
+    "GroundingLink": {
+      "description": "Layer B. 복기 문장이 어느 교리 노드에 닿는지의 확률적 매핑.",
+      "type": "object",
+      "required": ["node_id", "confidence"],
+      "additionalProperties": false,
+      "properties": {
+        "node_id": { "type": "string", "description": "닿은 Layer A 노드 id" },
+        "confidence": { "type": "number", "minimum": 0, "maximum": 1 },
+        "rationale": { "type": "string", "description": "이 노드로 매핑한 근거." }
+      }
+    },
+
+    "GapType": {
+      "description": "격차 2분류. 고리를 닫는 방향을 결정한다.",
+      "type": "string",
+      "enum": ["doctrine", "execution"],
+      "$comment": "doctrine=교리 격차(아는 것의 문제, modality가 약하거나 조항 부재/모호) → SOP 수정 제안. execution=실행 격차(몸이 따르는 것의 문제, 조항은 충분한데 미준수) → 재훈련 drill."
+    },
+
+    "OutputKind": {
+      "type": "string",
+      "enum": ["sop_amendment", "retraining_drill"],
+      "$comment": "doctrine→sop_amendment, execution→retraining_drill"
+    },
+
+    "Lesson": {
+      "description": "Layer B. 복기 한 조각이 교리 지도에 부착된 단위. grounding→재발→격차분류→출력의 전체 사슬을 담는다.",
+      "type": "object",
+      "required": ["id", "debrief_id", "quote", "grounding", "gap"],
+      "additionalProperties": false,
+      "properties": {
+        "id": { "type": "string", "description": "교훈 id", "examples": ["LSN-2026-0601-01"] },
+        "debrief_id": { "type": "string", "description": "출처 복기 id" },
+        "incident": { "type": "string", "description": "사건명", "examples": ["한빛아파트 3동 고층화재"] },
+        "quote": { "type": "string", "description": "복기 원문 인용." },
+        "grounding": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "$ref": "#/$defs/GroundingLink" },
+          "description": "닿은 노드들(다중 가능)."
+        },
+        "gap": {
+          "type": "object",
+          "required": ["type", "rationale", "verdict_confidence"],
+          "additionalProperties": false,
+          "properties": {
+            "type": { "$ref": "#/$defs/GapType" },
+            "rationale": { "type": "string", "description": "교리/실행 판정 근거. 대상 노드 modality를 참조하는 것이 원칙." },
+            "verdict_confidence": { "type": "number", "minimum": 0, "maximum": 1 }
+          }
+        },
+        "recurrence": {
+          "type": "object",
+          "description": "같은 노드에서 과거 교훈 재출현 여부. 재발은 node_id 단위로 추적한다.",
+          "required": ["is_recurring", "count"],
+          "additionalProperties": false,
+          "properties": {
+            "is_recurring": { "type": "boolean" },
+            "count": { "type": "integer", "minimum": 1, "description": "이 노드에 누적된 교훈 수(현재 포함)." },
+            "prior_lessons": { "type": "array", "items": { "type": "string" }, "description": "과거 동일 노드 교훈 id들." }
+          }
+        },
+        "output": {
+          "type": "object",
+          "description": "고리를 닫는 산출물. gap.type에 따라 종류가 결정된다.",
+          "required": ["kind", "target_node", "proposal"],
+          "additionalProperties": false,
+          "properties": {
+            "kind": { "$ref": "#/$defs/OutputKind" },
+            "target_node": { "type": "string", "description": "수정/훈련이 향하는 노드 id." },
+            "proposal": { "type": "string", "description": "sop_amendment=교리 편집안(원문 대비 diff 서술), retraining_drill=재훈련 시나리오." },
+            "drill_ref": { "type": ["string", "null"], "description": "drill 설계 참조(예: reference/8-step-training-model.md). amendment면 null." }
+          }
+        }
+      }
+    },
+
+    "DoctrineGraph": {
+      "description": "① 교리 지도화 산출물(Layer A 문서).",
+      "type": "object",
+      "required": ["doc_type", "version", "domain", "nodes", "edges"],
+      "additionalProperties": false,
+      "properties": {
+        "doc_type": { "const": "doctrine_graph" },
+        "version": { "type": "string", "description": "온톨로지 스키마 버전", "examples": ["1.0.0"] },
+        "domain": { "$ref": "#/$defs/Domain" },
+        "source": { "type": "string", "examples": ["재난현장표준작전절차.pdf"] },
+        "scope": { "type": "string", "description": "추출 범위(데모 슬라이스)", "examples": ["SOP 107 무선통신"] },
+        "nodes": { "type": "array", "items": { "$ref": "#/$defs/DoctrineNode" } },
+        "edges": { "type": "array", "items": { "$ref": "#/$defs/DoctrineEdge" } }
+      }
+    },
+
+    "DebriefOverlay": {
+      "description": "② 복기 반영 산출물(Layer B 문서). 기존 DoctrineGraph 위에 부착된다.",
+      "type": "object",
+      "required": ["doc_type", "version", "graph_ref", "lessons"],
+      "additionalProperties": false,
+      "properties": {
+        "doc_type": { "const": "debrief_overlay" },
+        "version": { "type": "string" },
+        "graph_ref": { "type": "string", "description": "부착 대상 DoctrineGraph 식별자/경로." },
+        "lessons": { "type": "array", "items": { "$ref": "#/$defs/Lesson" } }
+      }
+    }
+  },
+
+  "oneOf": [
+    { "$ref": "#/$defs/DoctrineGraph" },
+    { "$ref": "#/$defs/DebriefOverlay" }
+  ]
+}

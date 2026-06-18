@@ -1,0 +1,355 @@
+/* =============================================================================
+   FI:RECALL — Component primitives
+   토큰만으로 조립되는 베이스 컴포넌트. 모서리는 전부 둥글게.
+   ============================================================================= */
+
+/* ---- Button --------------------------------------------------------------- */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--sp-2);
+  font-family: var(--font-body);
+  font-weight: 600;
+  font-size: var(--fs-sm);
+  line-height: 1;
+  padding: 11px 18px;
+  border-radius: var(--r-md);
+  border: 1px solid transparent;
+  transition: transform var(--dur-fast) var(--ease-out),
+    background var(--dur-mid) var(--ease-soft),
+    box-shadow var(--dur-mid) var(--ease-soft),
+    border-color var(--dur-mid) var(--ease-soft);
+  white-space: nowrap;
+}
+.btn:active { transform: translateY(1px) scale(0.99); }
+
+.btn--primary {
+  background: linear-gradient(180deg, var(--ember-400), var(--ember-500));
+  color: var(--text-on-ember);
+  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.18) inset, var(--shadow-sm);
+}
+.btn--primary:hover {
+  background: linear-gradient(180deg, var(--ember-400), var(--ember-600));
+  box-shadow: var(--glow-ember);
+}
+
+.btn--ghost {
+  background: rgba(255, 255, 255, 0.03);
+  color: var(--text-primary);
+  border-color: var(--border-hair);
+}
+.btn--ghost:hover { background: rgba(255, 255, 255, 0.07); border-color: var(--border-soft); }
+
+.btn--quiet { background: transparent; color: var(--text-secondary); }
+.btn--quiet:hover { color: var(--text-strong); background: rgba(255, 255, 255, 0.04); }
+
+.btn--icon {
+  padding: 0;
+  width: 42px;
+  height: 42px;
+  border-radius: var(--r-md);
+  background: rgba(255, 255, 255, 0.03);
+  color: var(--text-secondary);
+  border-color: var(--border-hair);
+}
+.btn--icon:hover { color: var(--text-strong); border-color: var(--border-soft); background: rgba(255,255,255,0.06); }
+
+/* ---- Card / Panel --------------------------------------------------------- */
+.card {
+  position: relative;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.018), transparent 40%),
+    var(--bg-surface);
+  border: 1px solid var(--border-hair);
+  border-radius: var(--r-xl);
+  box-shadow: var(--shadow-card);
+  transition: border-color var(--dur-mid) var(--ease-soft),
+    box-shadow var(--dur-mid) var(--ease-soft),
+    transform var(--dur-mid) var(--ease-out);
+}
+.card--interactive { cursor: pointer; }
+.card--interactive:hover {
+  border-color: var(--border-soft);
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-lg);
+}
+.card--selected { border-color: var(--border-ember); box-shadow: var(--glow-ember); }
+
+.panel {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-hair);
+  border-radius: var(--r-2xl);
+  box-shadow: var(--shadow-card);
+}
+.inset {
+  background: var(--bg-inset);
+  border: 1px solid var(--border-faint);
+  border-radius: var(--r-lg);
+}
+
+/* ---- Badge / Tag ---------------------------------------------------------- */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-family: var(--font-mono);
+  font-size: var(--fs-xs);
+  font-weight: 500;
+  letter-spacing: 0.02em;
+  padding: 4px 10px;
+  border-radius: var(--r-pill);
+  border: 1px solid var(--border-hair);
+  color: var(--text-secondary);
+  background: rgba(255, 255, 255, 0.03);
+}
+.badge--ember   { color: var(--ember-400);  background: var(--gap-doctrine-bg);  border-color: rgba(232,92,36,0.3); }
+.badge--teal    { color: var(--gap-execution); background: var(--gap-execution-bg); border-color: rgba(41,176,163,0.3); }
+.badge--recur {
+  color: #fff;
+  background: rgba(255, 91, 110, 0.16);
+  border-color: rgba(255, 91, 110, 0.45);
+  box-shadow: var(--glow-recur);
+  animation: recur-pulse 1.8s var(--ease-soft) infinite;
+}
+@keyframes recur-pulse {
+  0%, 100% { box-shadow: 0 0 0 1px rgba(255,91,110,0.45), 0 0 0 rgba(255,91,110,0); }
+  50%      { box-shadow: 0 0 0 1px rgba(255,91,110,0.6), 0 0 22px rgba(255,91,110,0.35); }
+}
+
+/* ---- Node chip (교리 지도 노드) ------------------------------------------- */
+.node-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 14px 8px 10px;
+  border-radius: var(--r-pill);
+  font-size: var(--fs-sm);
+  font-weight: 500;
+  color: var(--text-primary);
+  background: var(--bg-surface-2);
+  border: 1px solid var(--border-hair);
+  transition: transform var(--dur-fast) var(--ease-out), box-shadow var(--dur-mid) var(--ease-soft);
+}
+.node-chip__dot { width: 9px; height: 9px; border-radius: var(--r-pill); flex: none; }
+.node-chip__id { font-family: var(--font-mono); font-size: var(--fs-xs); color: var(--text-muted); }
+.node-chip--procedure { border-color: rgba(76,154,237,0.35); background: var(--node-procedure-bg); }
+.node-chip--procedure .node-chip__dot { background: var(--node-procedure); }
+.node-chip--decision  { border-color: rgba(242,179,65,0.35); background: var(--node-decision-bg); }
+.node-chip--decision .node-chip__dot { background: var(--node-decision); }
+.node-chip--hazard    { border-color: rgba(240,71,62,0.35); background: var(--node-hazard-bg); }
+.node-chip--hazard .node-chip__dot { background: var(--node-hazard); }
+.node-chip--standard  { border-color: rgba(138,144,153,0.35); background: var(--node-standard-bg); }
+.node-chip--standard .node-chip__dot { background: var(--node-standard); }
+.node-chip--lit {
+  transform: translateY(-1px);
+  box-shadow: 0 0 0 1px var(--border-ember), 0 6px 20px rgba(232,92,36,0.22);
+}
+
+/* ---- Status dot ----------------------------------------------------------- */
+.status-dot { width: 8px; height: 8px; border-radius: var(--r-pill); display: inline-block; }
+.status-dot--good { background: var(--status-good); box-shadow: 0 0 10px rgba(63,185,96,0.5); }
+.status-dot--warn { background: var(--status-warn); box-shadow: 0 0 10px rgba(232,163,61,0.5); }
+.status-dot--bad  { background: var(--status-bad);  box-shadow: 0 0 10px rgba(240,71,62,0.5); }
+
+/* ---- Stepper -------------------------------------------------------------- */
+.stepper { display: flex; align-items: center; gap: 0; }
+.step { display: flex; flex-direction: column; align-items: center; gap: 7px; }
+.step__icon {
+  width: 40px; height: 40px;
+  display: grid; place-items: center;
+  border-radius: var(--r-md);
+  border: 1px solid var(--border-hair);
+  color: var(--text-muted);
+  background: rgba(255, 255, 255, 0.02);
+  transition: all var(--dur-mid) var(--ease-soft);
+}
+.step__label {
+  font-family: var(--font-display);
+  font-size: var(--fs-sm);
+  font-weight: 500;
+  color: var(--text-muted);
+}
+.step--done .step__icon { color: var(--text-secondary); border-color: var(--border-soft); }
+.step--done .step__label { color: var(--text-secondary); }
+.step--active .step__icon {
+  color: var(--text-on-ember);
+  background: linear-gradient(180deg, var(--ember-400), var(--ember-500));
+  border-color: transparent;
+  box-shadow: var(--glow-ember);
+}
+.step--active .step__label { color: var(--ember-400); font-weight: 600; }
+.step__line { width: 90px; height: 1px; background: var(--border-hair); margin: 0 4px 22px; }
+.step--active-dot { width: 5px; height: 5px; border-radius: var(--r-pill); background: var(--ember-500); }
+
+/* ---- Diff (SOP 수정안) ---------------------------------------------------- */
+.diff-line {
+  font-family: var(--font-mono);
+  font-size: var(--fs-sm);
+  line-height: 1.7;
+  padding: 6px 12px;
+  border-radius: var(--r-sm);
+  display: block;
+}
+.diff-line--del { background: rgba(240,71,62,0.10); color: #f3a59f; }
+.diff-line--del::before { content: "− "; color: var(--status-bad); }
+.diff-line--add { background: rgba(63,185,96,0.10); color: #a7e0b6; }
+.diff-line--add::before { content: "+ "; color: var(--status-good); }
+
+/* ---- Workbench: 3-zone layout & map nodes -------------------------------- */
+.zone {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-hair);
+  border-radius: var(--r-2xl);
+  box-shadow: var(--shadow-card);
+  overflow: hidden;
+}
+.zone__head {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 16px 18px;
+  border-bottom: 1px solid var(--border-faint);
+  flex: none;
+}
+.zone__body { padding: 18px; overflow-y: auto; flex: 1; min-height: 0; }
+
+.seg {
+  display: inline-flex; padding: 3px; gap: 3px;
+  background: var(--bg-inset); border: 1px solid var(--border-faint);
+  border-radius: var(--r-pill);
+}
+.seg__btn {
+  border: none; background: transparent; color: var(--text-muted);
+  font-family: var(--font-body); font-weight: 600; font-size: var(--fs-sm);
+  padding: 7px 16px; border-radius: var(--r-pill);
+  transition: all var(--dur-mid) var(--ease-soft);
+}
+.seg__btn--on { background: var(--bg-elevated); color: var(--text-strong); box-shadow: var(--shadow-sm); }
+
+.field {
+  width: 100%; resize: none;
+  background: var(--bg-sunken); color: var(--text-primary);
+  border: 1px solid var(--border-hair); border-radius: var(--r-lg);
+  padding: 14px; font-family: var(--font-body); font-size: var(--fs-sm);
+  line-height: var(--lh-body);
+}
+.field:focus { outline: none; border-color: var(--border-ember); }
+
+.fb-item {
+  width: 100%; text-align: left;
+  background: var(--bg-inset); border: 1px solid var(--border-faint);
+  border-radius: var(--r-lg); padding: 12px 14px;
+  color: var(--text-secondary); transition: all var(--dur-mid) var(--ease-soft);
+}
+.fb-item:hover { border-color: var(--border-soft); color: var(--text-primary); }
+.fb-item--on { border-color: var(--border-ember); background: var(--gap-doctrine-bg); color: var(--text-strong); }
+
+/* 교리 지도 노드 (맵 안의 박스형 노드) */
+.map-node {
+  position: absolute; transform: translate(-50%, -50%);
+  display: flex; flex-direction: column; gap: 3px;
+  min-width: 132px; padding: 10px 12px;
+  background: var(--bg-surface-2); border: 1px solid var(--border-hair);
+  border-radius: var(--r-lg); box-shadow: var(--shadow-sm);
+  transition: box-shadow var(--dur-slow) var(--ease-out),
+    border-color var(--dur-slow) var(--ease-out),
+    transform var(--dur-slow) var(--ease-out);
+  z-index: 2;
+}
+.map-node__top { display: flex; align-items: center; gap: 7px; }
+.map-node__label { font-size: var(--fs-sm); font-weight: 500; color: var(--text-primary); }
+.map-node__id { font-family: var(--font-mono); font-size: 10px; color: var(--text-muted); }
+.map-node--procedure { border-color: rgba(76,154,237,0.35); }
+.map-node--decision  { border-color: rgba(242,179,65,0.35); }
+.map-node--hazard    { border-color: rgba(240,71,62,0.35); }
+.map-node--standard  { border-color: rgba(138,144,153,0.35); }
+.map-node--lit {
+  border-color: var(--border-ember);
+  box-shadow: var(--glow-ember);
+  transform: translate(-50%, -50%) scale(1.05);
+  z-index: 3;
+}
+.map-node--recur { border-color: rgba(255,91,110,0.55); box-shadow: var(--glow-recur); }
+.map-node__recur {
+  position: absolute; top: -9px; right: -9px;
+  font-family: var(--font-mono); font-size: 10px; font-weight: 600; color: #fff;
+  background: var(--recurrence); padding: 2px 7px; border-radius: var(--r-pill);
+  box-shadow: var(--glow-recur);
+}
+
+/* ---- Upload dropzone ------------------------------------------------------ */
+.dropzone {
+  display: flex; flex-direction: column; align-items: center; gap: 6px;
+  padding: 18px 14px; text-align: center;
+  background: var(--bg-inset);
+  border: 1.5px dashed var(--border-soft); border-radius: var(--r-lg);
+  color: var(--text-muted); cursor: pointer;
+  transition: all var(--dur-mid) var(--ease-soft);
+}
+.dropzone:hover { border-color: var(--border-ember); color: var(--text-secondary); background: var(--gap-doctrine-bg); }
+.dropzone--drag { border-color: var(--ember-500); background: var(--gap-doctrine-bg); color: var(--text-strong); }
+.dropzone__icon { font-size: 20px; color: var(--ember-400); }
+
+/* ---- Doc list item -------------------------------------------------------- */
+.doc-item {
+  display: flex; align-items: center; gap: 10px;
+  padding: 11px 12px; width: 100%; text-align: left;
+  background: var(--bg-inset); border: 1px solid var(--border-faint);
+  border-radius: var(--r-lg); color: var(--text-secondary);
+  transition: all var(--dur-mid) var(--ease-soft);
+}
+.doc-item:hover { border-color: var(--border-soft); }
+.doc-item--on { border-color: var(--border-ember); background: var(--gap-doctrine-bg); }
+.doc-item__body { flex: 1; min-width: 0; }
+.doc-item__name {
+  font-size: var(--fs-sm); font-weight: 600; color: var(--text-strong);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.doc-item__meta { font-family: var(--font-mono); font-size: 10px; color: var(--text-muted); }
+.doc-item__view {
+  flex: none; border: 1px solid var(--border-hair); background: rgba(255,255,255,0.03);
+  color: var(--text-secondary); font-size: var(--fs-xs); font-weight: 600;
+  padding: 5px 10px; border-radius: var(--r-pill); transition: all var(--dur-mid) var(--ease-soft);
+}
+.doc-item__view:hover { color: var(--text-strong); border-color: var(--border-soft); }
+
+/* ---- Status pill (SOP 처리 전/중/완료) ------------------------------------ */
+.pill {
+  display: inline-flex; align-items: center; gap: 6px;
+  font-size: var(--fs-xs); font-weight: 600; padding: 4px 10px;
+  border-radius: var(--r-pill); border: 1px solid var(--border-hair);
+}
+.pill--idle { color: var(--text-muted); background: rgba(255,255,255,0.03); }
+.pill--processing { color: var(--ember-400); background: var(--gap-doctrine-bg); border-color: rgba(232,92,36,0.35); }
+.pill--done { color: var(--status-good); background: rgba(63,185,96,0.10); border-color: rgba(63,185,96,0.35); }
+.spinner {
+  width: 11px; height: 11px; border-radius: 50%;
+  border: 2px solid rgba(232,92,36,0.25); border-top-color: var(--ember-500);
+  animation: spin 0.7s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+.progress-track { height: 4px; border-radius: var(--r-pill); background: var(--bg-sunken); overflow: hidden; }
+.progress-fill { height: 100%; border-radius: var(--r-pill); background: linear-gradient(90deg, var(--ember-400), var(--ember-500)); transition: width 0.3s var(--ease-out); }
+
+/* ---- Doc viewer modal ----------------------------------------------------- */
+.modal-backdrop {
+  position: fixed; inset: 0; z-index: 100;
+  background: rgba(6,6,7,0.72); backdrop-filter: blur(6px);
+  display: grid; place-items: center; padding: 24px;
+}
+.modal {
+  width: min(720px, 100%); max-height: 82vh; display: flex; flex-direction: column;
+  background: var(--bg-surface); border: 1px solid var(--border-soft);
+  border-radius: var(--r-2xl); box-shadow: var(--shadow-lg); overflow: hidden;
+}
+.modal__head {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 18px 20px; border-bottom: 1px solid var(--border-faint); flex: none;
+}
+.modal__body {
+  padding: 22px; overflow-y: auto;
+  font-size: var(--fs-sm); line-height: var(--lh-body); color: var(--text-primary);
+  white-space: pre-wrap; font-family: var(--font-body);
+}

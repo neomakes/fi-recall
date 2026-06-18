@@ -11,3 +11,6 @@ How to Build Your Seed Round Pitch Deck (TEMPLATE created by doola.com).pptx
 
 # OMC orchestration state (local only)
 .omc/
+
+# Pipeline generated artifacts
+pipeline/out/
