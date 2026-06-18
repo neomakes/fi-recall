@@ -9,8 +9,12 @@ import {
   type MapNode,
   type Revision,
 } from "../data/fixtures";
+import { api, apiConfigured } from "../lib/api";
 
 type SopStatus = "idle" | "processing" | "done";
+
+// 렌더용 느슨한 지도 타입 — 픽스처(MapNode)와 라이브(api MapNode) 둘 다 수용.
+type AnyMap = { title: string; nodes: any[]; edges: any[] };
 
 interface DebriefDoc {
   id: string;
@@ -120,11 +124,11 @@ const EDGE_KO: Record<string, string> = { sequence: "선후", dependency: "의�
 
 type Selection = { kind: "node"; id: string } | { kind: "edge"; idx: number } | null;
 
-function DoctrineMapView({ status, progress, lit, recur }: {
-  status: SopStatus; progress: number; lit: Set<string>; recur: Set<string>;
+function DoctrineMapView({ status, progress, lit, recur, map }: {
+  status: SopStatus; progress: number; lit: Set<string>; recur: Set<string>; map: AnyMap;
 }) {
   const byId = useMemo(
-    () => Object.fromEntries(DOCTRINE_MAP.nodes.map((n) => [n.id, n])) as Record<string, MapNode>, []
+    () => Object.fromEntries(map.nodes.map((n) => [n.id, n])) as Record<string, MapNode>, [map]
   );
   const edgeColor = (t: string) =>
     t === "exception" ? "var(--node-hazard)" : t === "dependency" ? "var(--node-procedure)" : "var(--border-soft)";
@@ -203,7 +207,7 @@ function DoctrineMapView({ status, progress, lit, recur }: {
               <path d="M0,0 L6,3 L0,6" fill="none" stroke="var(--text-faint)" strokeWidth="1.2" />
             </marker>
           </defs>
-          {DOCTRINE_MAP.edges.map((e, i) => {
+          {map.edges.map((e, i) => {
             const a = byId[e.from], b = byId[e.to];
             const active = lit.has(e.from) && lit.has(e.to);
             const isSel = sel?.kind === "edge" && sel.idx === i;
@@ -225,7 +229,7 @@ function DoctrineMapView({ status, progress, lit, recur }: {
             );
           })}
         </svg>
-        {DOCTRINE_MAP.nodes.map((n, i) => {
+        {map.nodes.map((n, i) => {
           const isLit = lit.has(n.id); const isRecur = recur.has(n.id);
           const isSel = sel?.kind === "node" && sel.id === n.id;
           return (
@@ -261,16 +265,16 @@ function DoctrineMapView({ status, progress, lit, recur }: {
 
       {/* 교리·출처 상세 카드 */}
       <AnimatePresence>
-        {sel && <DoctrineDetail sel={sel} byId={byId} onClose={() => setSel(null)} />}
+        {sel && <DoctrineDetail sel={sel} byId={byId} map={map} onClose={() => setSel(null)} />}
       </AnimatePresence>
     </div>
   );
 }
 
 /* 엣지/노드 클릭 → 관련 교리 + 출처 */
-function DoctrineDetail({ sel, byId, onClose }: { sel: NonNullable<Selection>; byId: Record<string, MapNode>; onClose: () => void }) {
+function DoctrineDetail({ sel, byId, map, onClose }: { sel: NonNullable<Selection>; byId: Record<string, MapNode>; map: AnyMap; onClose: () => void }) {
   const isEdge = sel.kind === "edge";
-  const edge = isEdge ? DOCTRINE_MAP.edges[sel.idx] : null;
+  const edge = isEdge ? map.edges[sel.idx] : null;
   const nodes = isEdge ? [byId[edge!.from], byId[edge!.to]] : [byId[sel.id]];
   return (
     <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 12 }}
@@ -298,11 +302,11 @@ function DoctrineDetail({ sel, byId, onClose }: { sel: NonNullable<Selection>; b
               <span className="status-dot" style={{ background: `var(--node-${n.type})`, boxShadow: "none" }} />
               <span style={{ fontSize: "var(--fs-sm)", fontWeight: 600, color: "var(--text-strong)" }}>{n.label}</span>
             </div>
-            <p style={{ fontSize: "var(--fs-sm)", color: "var(--text-primary)", lineHeight: 1.6, marginBottom: 8 }}>{n.clause}</p>
+            <p style={{ fontSize: "var(--fs-sm)", color: "var(--text-primary)", lineHeight: 1.6, marginBottom: 8 }}>{(n as any).clause ?? (n as any).quote}</p>
             <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
               <span className="label-eyebrow">출처</span>
               <span className="mono" style={{ fontSize: "var(--fs-xs)", color: "var(--ember-400)" }}>
-                {DOCTRINE_MAP.title} · {n.sopRef}
+                {map.title} · {n.sopRef}
               </span>
             </div>
           </div>
@@ -313,7 +317,7 @@ function DoctrineDetail({ sel, byId, onClose }: { sel: NonNullable<Selection>; b
 }
 
 /* ── 우측: 결과 ───────────────────────────────────────────────── */
-function Results({ applied, closed, onClose }: { applied: Applied | null; closed: boolean; onClose: () => void }) {
+function Results({ applied, closed, onClose, nodes }: { applied: Applied | null; closed: boolean; onClose: () => void; nodes: any[] }) {
   if (!applied) {
     return (
       <div style={{ display: "grid", placeItems: "center", height: "100%", textAlign: "center", padding: 24 }}>
@@ -341,7 +345,8 @@ function Results({ applied, closed, onClose }: { applied: Applied | null; closed
         <div className="label-eyebrow" style={{ marginBottom: 8 }}>태깅된 교리 노드</div>
         <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
           {applied.litNodes.map((id) => {
-            const n = DOCTRINE_MAP.nodes.find((x) => x.id === id)!;
+            const n = nodes.find((x) => x.id === id);
+            if (!n) return null;
             return (
               <span key={id} className={`node-chip node-chip--${n.type}`} style={{ padding: "5px 11px" }}>
                 <span className="node-chip__dot" /><span className="node-chip__id">{id}</span>
@@ -430,6 +435,11 @@ export default function Workbench() {
   const [selectedDoc, setSelectedDoc] = useState<string | null>(SAMPLE_DOCS[0]?.id ?? null);
   const [applied, setApplied] = useState<Applied | null>(null);
   const [closed, setClosed] = useState(false);
+  const [liveMap, setLiveMap] = useState<AnyMap | null>(null); // 백엔드 추출 결과(있으면 픽스처 대신)
+  const live = apiConfigured();
+
+  // 렌더에 쓰는 활성 지도: 라이브 추출본 우선, 없으면 픽스처.
+  const activeMap: AnyMap = liveMap ?? DOCTRINE_MAP;
 
   // 예시 토글 ON이면 input/ 예시 파일을 기본 선택지로 노출
   const sopName = uploadedSop ?? (sampleSop ? EXAMPLE_SOP : null);
@@ -458,15 +468,24 @@ export default function Workbench() {
   const mapReady = sopStatus === "done";
 
   /* SOP 적재 → 처리 중 → 완료 (교리 지도 생성) */
-  function generateMap() {
+  async function generateMap() {
     if (!sopName) return;
-    setSopStatus("processing"); setProgress(0); setApplied(null); setClosed(false);
-    const t = setInterval(() => {
-      setProgress((p) => {
-        if (p >= 100) { clearInterval(t); setSopStatus("done"); return 100; }
-        return Math.min(100, p + 8);
-      });
-    }, 90);
+    setSopStatus("processing"); setProgress(0); setApplied(null); setClosed(false); setLiveMap(null);
+    // 처리 중 진행바(UX용)
+    const t = setInterval(() => setProgress((p) => Math.min(95, p + 8)), 90);
+
+    if (live) {
+      try {
+        const { map } = await api.extract({ sop: "SOP-107", debrief: null });
+        clearInterval(t); setProgress(100); setLiveMap(map); setSopStatus("done");
+        return;
+      } catch (e) {
+        clearInterval(t);
+        alert(`백엔드 추출 실패 — 픽스처로 폴백합니다.\n${(e as Error).message}`);
+        // 폴백: 픽스처 지도
+      }
+    }
+    clearInterval(t); setProgress(100); setLiveMap(null); setSopStatus("done");
   }
 
   function onSopFiles(files: File[]) {
@@ -488,10 +507,24 @@ export default function Workbench() {
     if (added[0]) setSelectedDoc(added[0].id);
   }
 
-  function applyDoc() {
+  async function applyDoc() {
     const doc = docs.find((d) => d.id === selectedDoc);
     if (!doc || !mapReady) return;
     setClosed(false);
+
+    // 라이브: 백엔드가 grounding·격차분류·생성을 수행 (오프라인 백엔드는 골든 stand-in)
+    if (live) {
+      try {
+        const { applied: a } = await api.reflect({ debrief: doc.raw, nodes: activeMap.nodes });
+        setApplied({ docId: doc.id, source: doc.title, litNodes: a.litNodes,
+          recurrence: a.recurrence, revisions: a.revisions, drills: a.drills, heuristic: a.heuristic ?? false });
+        return;
+      } catch (e) {
+        alert(`백엔드 반영 실패 — 픽스처로 폴백합니다.\n${(e as Error).message}`);
+      }
+    }
+
+    // 폴백: 픽스처 프리셋 / 키워드 휴리스틱
     if (doc.fixtureId) {
       const fb = FEEDBACKS.find((f) => f.id === doc.fixtureId)!;
       setApplied({ docId: doc.id, source: fb.source, litNodes: fb.litNodes, recurrence: fb.recurrence, revisions: fb.revisions, drills: fb.drills, heuristic: false });
@@ -584,13 +617,9 @@ export default function Workbench() {
                 )}
                 {sopStatus === "done" && (
                   <div className="inset" style={{ padding: "10px 12px", fontSize: "var(--fs-xs)", color: "var(--text-secondary)" }}>
-                    교리 지도 생성됨 — 노드 <span className="mono" style={{ color: "var(--ember-400)" }}>{DOCTRINE_MAP.nodes.length}</span>개 · 엣지 <span className="mono" style={{ color: "var(--ember-400)" }}>{DOCTRINE_MAP.edges.length}</span>개
+                    교리 지도 생성됨{live ? " · 라이브" : ""} — 노드 <span className="mono" style={{ color: "var(--ember-400)" }}>{activeMap.nodes.length}</span>개 · 엣지 <span className="mono" style={{ color: "var(--ember-400)" }}>{activeMap.edges.length}</span>개
                   </div>
                 )}
-                <Button variant="primary" style={{ width: "100%" }}
-                  disabled={!sopName || sopStatus === "processing"} onClick={generateMap}>
-                  {sopStatus === "done" ? "교리 지도 재생성" : "교리 지도 생성 →"}
-                </Button>
               </>
             ) : (
               <>
@@ -610,7 +639,20 @@ export default function Workbench() {
                     <button className="doc-item__view" onClick={() => setViewing(d)}>보기</button>
                   </div>
                 ))}
-                <Button variant="primary" style={{ width: "100%", marginTop: 4 }}
+              </>
+            )}
+          </div>
+
+          {/* 하단 고정 액션 — 항상 사이드바 맨 아래 */}
+          <div className="zone__foot">
+            {tab === "sop" ? (
+              <Button variant="primary" style={{ width: "100%" }}
+                disabled={!sopName || sopStatus === "processing"} onClick={generateMap}>
+                {sopStatus === "done" ? "교리 지도 재생성" : "교리 지도 생성 →"}
+              </Button>
+            ) : (
+              <>
+                <Button variant="primary" style={{ width: "100%" }}
                   disabled={!mapReady || !selectedDoc} onClick={applyDoc}>
                   반영하기 →
                 </Button>
@@ -630,7 +672,7 @@ export default function Workbench() {
             <div>
               <div className="label-eyebrow">교리 지도 · SOP 온톨로지</div>
               <div style={{ fontFamily: "var(--font-display)", fontWeight: 700, fontSize: "var(--fs-h3)", marginTop: 2 }}>
-                {mapReady ? DOCTRINE_MAP.title : "교리 지도 미생성"}
+                {mapReady ? activeMap.title : "교리 지도 미생성"}
               </div>
             </div>
             <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
@@ -643,7 +685,7 @@ export default function Workbench() {
             </div>
           </div>
           <div className="zone__body" style={{ overflow: "hidden" }}>
-            <DoctrineMapView status={sopStatus} progress={progress} lit={lit} recur={recur} />
+            <DoctrineMapView status={sopStatus} progress={progress} lit={lit} recur={recur} map={activeMap} />
           </div>
         </div>
 
@@ -657,7 +699,7 @@ export default function Workbench() {
               </span>
             )}
           </div>
-          <div className="zone__body"><Results applied={applied} closed={closed} onClose={() => setClosed(true)} /></div>
+          <div className="zone__body"><Results applied={applied} closed={closed} onClose={() => setClosed(true)} nodes={activeMap.nodes} /></div>
         </div>
       </div>
 

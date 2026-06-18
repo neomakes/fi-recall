@@ -14,3 +14,10 @@ How to Build Your Seed Round Pitch Deck (TEMPLATE created by doola.com).pptx
 
 # Pipeline generated artifacts
 pipeline/out/
+
+# Node dependencies (any package: app/, server/, pipeline/)
+node_modules/
+
+# Secrets — never commit real keys. (.env.example 템플릿은 추적 허용)
+.env
+**/.env

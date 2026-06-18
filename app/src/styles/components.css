@@ -353,3 +353,12 @@
   font-size: var(--fs-sm); line-height: var(--lh-body); color: var(--text-primary);
   white-space: pre-wrap; font-family: var(--font-body);
 }
+
+/* ---- Zone footer (좌측 사이드바 하단 고정 액션) -------------------------- */
+.zone__foot {
+  flex: none;
+  padding: 14px 18px;
+  border-top: 1px solid var(--border-faint);
+  background: linear-gradient(180deg, transparent, rgba(0,0,0,0.12));
+  display: grid; gap: 8px;
+}
