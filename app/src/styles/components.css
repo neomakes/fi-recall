@@ -245,17 +245,15 @@
 .fb-item:hover { border-color: var(--border-soft); color: var(--text-primary); }
 .fb-item--on { border-color: var(--border-ember); background: var(--gap-doctrine-bg); color: var(--text-strong); }
 
-/* 교리 지도 노드 (맵 안의 박스형 노드) */
+/* 교리 지도 노드 (맵 안의 박스형 노드) — 위치/중앙정렬은 anchor div가 담당, 여긴 박스 스타일만 */
 .map-node {
-  position: absolute; transform: translate(-50%, -50%);
+  position: relative;
   display: flex; flex-direction: column; gap: 3px;
   min-width: 132px; padding: 10px 12px;
   background: var(--bg-surface-2); border: 1px solid var(--border-hair);
   border-radius: var(--r-lg); box-shadow: var(--shadow-sm);
   transition: box-shadow var(--dur-slow) var(--ease-out),
-    border-color var(--dur-slow) var(--ease-out),
-    transform var(--dur-slow) var(--ease-out);
-  z-index: 2;
+    border-color var(--dur-slow) var(--ease-out);
 }
 .map-node__top { display: flex; align-items: center; gap: 7px; }
 .map-node__label { font-size: var(--fs-sm); font-weight: 500; color: var(--text-primary); }
@@ -267,8 +265,7 @@
 .map-node--lit {
   border-color: var(--border-ember);
   box-shadow: var(--glow-ember);
-  transform: translate(-50%, -50%) scale(1.05);
-  z-index: 3;
+  /* scale(점등)·z-index는 anchor/motion이 담당(중앙 정렬 transform과 충돌 방지) */
 }
 .map-node--recur { border-color: rgba(255,91,110,0.55); box-shadow: var(--glow-recur); }
 .map-node__recur {

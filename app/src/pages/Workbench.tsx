@@ -276,21 +276,26 @@ function DoctrineMapView({ status, progress, lit, recur, map }: {
           const isLit = lit.has(n.id); const isRecur = recur.has(n.id);
           const isSel = sel?.kind === "node" && sel.id === n.id;
           return (
-            <motion.div key={n.id} initial={{ opacity: 0, scale: 0.8 }} animate={{ opacity: 1, scale: 1 }}
-              transition={{ delay: i * 0.06, duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
-              className={`map-node map-node--${n.type}${isLit ? " map-node--lit" : ""}${isRecur ? " map-node--recur" : ""}`}
-              style={{ left: `${n.x}%`, top: `${n.y}%`, cursor: "pointer",
-                outline: isSel ? "2px solid var(--ember-400)" : undefined, outlineOffset: 2 }}
+            // anchor: 위치 고정(중앙 정렬). transform을 motion이 덮어쓰지 않도록 분리.
+            <div key={n.id}
+              style={{ position: "absolute", left: `${n.x}%`, top: `${n.y}%`,
+                transform: "translate(-50%, -50%)", zIndex: isLit ? 3 : 2 }}
               onMouseDown={(ev) => ev.stopPropagation()}
               onClick={(ev) => { ev.stopPropagation(); setSel({ kind: "node", id: n.id }); }}>
-              {isRecur && <span className="map-node__recur">▲ 재발</span>}
-              <div className="map-node__top">
-                <span className="status-dot" style={{ background: `var(--node-${n.type})`, boxShadow: "none" }} />
-                <span className="map-node__id">{n.id}</span>
-              </div>
-              <span className="map-node__label">{n.label}</span>
-              <span className="map-node__id">{n.sopRef}</span>
-            </motion.div>
+              {/* inner: 애니메이션(등장+점등 scale)만 담당 — 중앙 기준 scale이라 위치 불변 */}
+              <motion.div initial={{ opacity: 0, scale: 0.8 }} animate={{ opacity: 1, scale: isLit ? 1.06 : 1 }}
+                transition={{ delay: i * 0.06, duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
+                className={`map-node map-node--${n.type}${isLit ? " map-node--lit" : ""}${isRecur ? " map-node--recur" : ""}`}
+                style={{ cursor: "pointer", outline: isSel ? "2px solid var(--ember-400)" : undefined, outlineOffset: 2 }}>
+                {isRecur && <span className="map-node__recur">▲ 재발</span>}
+                <div className="map-node__top">
+                  <span className="status-dot" style={{ background: `var(--node-${n.type})`, boxShadow: "none" }} />
+                  <span className="map-node__id">{n.id}</span>
+                </div>
+                <span className="map-node__label">{n.label}</span>
+                <span className="map-node__id">{n.sopRef}</span>
+              </motion.div>
+            </div>
           );
         })}
       </div>
