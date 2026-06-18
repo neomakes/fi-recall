@@ -3,19 +3,30 @@
 
 const REL_TO_EDGE = { contains: "sequence", sequence: "sequence", dependency: "dependency", exception: "exception", reference: "dependency" };
 
-// 결정론적 계층 레이아웃: clause 깊이(점 개수)를 레벨로, 같은 레벨은 x로 균등 분산.
+// 결정론적 2D 레이아웃: 주(主) 섹션 번호(clause 첫 정수)를 열(column)로,
+// 같은 섹션의 하위 조항을 행(row)으로 분산.
+// 예) "1.1","1.3"→1열 / "2.6"→2열 / "3.1","3.2"→3열.
+// (이전 버전은 점 개수를 레벨로 써서, SOP-107처럼 clause가 모두 단일 점이면
+//  전부 한 줄에 겹쳐 깨졌다.)
 function layout(nodes) {
-  const level = (n) => n.clause.split(".").length; // "2" → 1, "2.6" → 2
-  const byLevel = new Map();
-  for (const n of nodes) (byLevel.get(level(n)) ?? byLevel.set(level(n), []).get(level(n))).push(n);
-  const levels = [...byLevel.keys()].sort((a, b) => a - b);
+  const section = (n) => parseInt(String(n.clause), 10) || 0; // "2.6" → 2, "2.6.1" → 2
+  const byCol = new Map();
+  for (const n of nodes) {
+    const c = section(n);
+    if (!byCol.has(c)) byCol.set(c, []);
+    byCol.get(c).push(n);
+  }
+  const cols = [...byCol.keys()].sort((a, b) => a - b);
+  const X0 = 14, X1 = 86, Y0 = 16, Y1 = 84;
   const pos = {};
-  levels.forEach((lv, li) => {
-    const row = byLevel.get(lv).sort((a, b) => a.clause.localeCompare(b.clause, undefined, { numeric: true }));
-    const y = levels.length === 1 ? 50 : 16 + (li * 68) / Math.max(1, levels.length - 1);
-    row.forEach((n, i) => {
-      const x = row.length === 1 ? 50 : 12 + (i * 76) / Math.max(1, row.length - 1);
-      pos[n.id] = { x: Math.round(x), y: Math.round(y) };
+  cols.forEach((c, ci) => {
+    const x = cols.length === 1 ? 50 : Math.round(X0 + (ci * (X1 - X0)) / (cols.length - 1));
+    const rows = byCol
+      .get(c)
+      .sort((a, b) => String(a.clause).localeCompare(String(b.clause), undefined, { numeric: true }));
+    rows.forEach((n, ri) => {
+      const y = rows.length === 1 ? 50 : Math.round(Y0 + (ri * (Y1 - Y0)) / (rows.length - 1));
+      pos[n.id] = { x, y };
     });
   });
   return pos;
