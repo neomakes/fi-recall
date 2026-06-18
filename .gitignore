@@ -8,3 +8,6 @@ How to Build Your Seed Round Pitch Deck (TEMPLATE created by doola.com).pptx
 # Scratch
 *.tmp
 /tmp/
+
+# OMC orchestration state (local only)
+.omc/
