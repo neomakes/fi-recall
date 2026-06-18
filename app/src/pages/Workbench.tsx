@@ -16,6 +16,49 @@ type SopStatus = "idle" | "processing" | "done";
 // 렌더용 느슨한 지도 타입 — 픽스처(MapNode)와 라이브(api MapNode) 둘 다 수용.
 type AnyMap = { title: string; nodes: any[]; edges: any[] };
 
+/* 좌표 자가복구 — 라이브 백엔드가 좌표를 한 줄로 붕괴시켜(옛 레이아웃) 보내거나
+   x/y가 비면, id의 조항번호로 섹션(열)×하위(행) 2D 재배치한다.
+   서버가 올바른 좌표를 주면 그대로 통과(붕괴 감지 시에만 개입). */
+function clauseOf(id: string): string {
+  const m = String(id).match(/(\d+(?:\.\d+)*)\s*$/);
+  return m ? m[1] : String(id);
+}
+function relayout(nodes: any[]): Record<string, { x: number; y: number }> {
+  const byCol = new Map<number, any[]>();
+  for (const n of nodes) {
+    const c = parseInt(clauseOf(n.id), 10) || 0;
+    if (!byCol.has(c)) byCol.set(c, []);
+    byCol.get(c)!.push(n);
+  }
+  const cols = [...byCol.keys()].sort((a, b) => a - b);
+  const X0 = 14, X1 = 86, Y0 = 16, Y1 = 84;
+  const pos: Record<string, { x: number; y: number }> = {};
+  cols.forEach((c, ci) => {
+    const x = cols.length === 1 ? 50 : Math.round(X0 + (ci * (X1 - X0)) / (cols.length - 1));
+    const rows = byCol.get(c)!.slice().sort((a, b) =>
+      clauseOf(a.id).localeCompare(clauseOf(b.id), undefined, { numeric: true }));
+    rows.forEach((n, ri) => {
+      const y = rows.length === 1 ? 50 : Math.round(Y0 + (ri * (Y1 - Y0)) / (rows.length - 1));
+      pos[n.id] = { x, y };
+    });
+  });
+  return pos;
+}
+function normalizeMap(map: AnyMap): AnyMap {
+  if (!map?.nodes?.length || map.nodes.length === 1) return map;
+  const ys = new Set(map.nodes.map((n) => n.y));
+  const xs = new Set(map.nodes.map((n) => n.x));
+  const collapsed =
+    ys.size <= 1 || xs.size <= 1 || // 한 줄/한 열로 붕괴
+    map.nodes.some((n) => typeof n.x !== "number" || typeof n.y !== "number");
+  if (!collapsed) return map;
+  const pos = relayout(map.nodes);
+  return {
+    ...map,
+    nodes: map.nodes.map((n) => ({ ...n, x: pos[n.id]?.x ?? n.x ?? 50, y: pos[n.id]?.y ?? n.y ?? 50 })),
+  };
+}
+
 interface DebriefDoc {
   id: string;
   name: string;
@@ -477,7 +520,7 @@ export default function Workbench() {
     if (live) {
       try {
         const { map } = await api.extract({ sop: "SOP-107", debrief: null });
-        clearInterval(t); setProgress(100); setLiveMap(map); setSopStatus("done");
+        clearInterval(t); setProgress(100); setLiveMap(normalizeMap(map)); setSopStatus("done");
         return;
       } catch (e) {
         clearInterval(t);
